@@ -43,6 +43,13 @@ export default class SceneInit {
     document.body.appendChild(this.renderer.domElement);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // point camera towards center of fft map
+    this.controls.target = new THREE.Vector3(0, 0, 0);
+    // makes DAT menu load multiple times during error recovery
+    //
+    // Could not open SceneInit.js in the editor.
+    // The editor process exited with an error: Terminal editors can only be used on macOS.
+    // To set up the editor integration, add something like REACT_EDITOR=atom to the .env.local file in your project folder and restart the development server.
 
     this.stats = Stats();
     document.body.appendChild(this.stats.dom);
