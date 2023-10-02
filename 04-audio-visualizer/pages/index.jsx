@@ -109,12 +109,15 @@ export default function Home() {
   //   setShowCustomEditor(!showCustomEditor);
   // };
 
+  // bug when switching betwen tracks in Chrome (needs browser restart): 
+  // https://stackoverflow.com/questions/50657659/different-behaviour-of-webaudio-api-on-google-chrome
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="absolute bottom-2 right-2">
         <audio
           id="myAudio"
-          src="./fur_elise.mp3"
+          src="./00_ice_sheets.mp3"
+          //src="./fur_elise.mp3"
           className="w-80"
           controls
           autoPlay

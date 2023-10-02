@@ -105,3 +105,4 @@ dist
 
 # MacOS
 *.DS*
+04-audio-visualizer/package-lock.json
