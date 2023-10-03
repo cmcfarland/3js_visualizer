@@ -6,6 +6,7 @@ import { vertexShader, fragmentShader } from "./lib/Shaders";
 
 export default function Home() {
   let test, audioContext, audioElement, dataArray, analyser, source;
+  let timeArray;
 
   let gui;
   const initGui = async () => {
@@ -20,7 +21,7 @@ export default function Home() {
     analyser = audioContext.createAnalyser();
     source.connect(analyser);
     analyser.connect(audioContext.destination);
-    analyser.fftSize = 1024;
+    analyser.fftSize = 2048;
     dataArray = new Uint8Array(analyser.frequencyBinCount);
   };
 
@@ -75,10 +76,12 @@ export default function Home() {
       audioWaveGui
         .add(planeCustomMaterial, "wireframe")
         .name("wireframe")
+        .setValue(false)
         .listen();
       audioWaveGui
         .add(uniforms.u_amplitude, "value", 1.0, 8.0)
         .name("amplitude")
+        .setValue(4.0)
         .listen();
     }
 
@@ -111,6 +114,9 @@ export default function Home() {
 
   // bug when switching betwen tracks in Chrome (needs browser restart): 
   // https://stackoverflow.com/questions/50657659/different-behaviour-of-webaudio-api-on-google-chrome
+  
+  // InvalidStateError: Failed to execute 'createMediaElementSource' on 'AudioContext': 
+  // HTMLMediaElement already connected previously to a different MediaElementSourceNode.
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="absolute bottom-2 right-2">
@@ -124,6 +130,9 @@ export default function Home() {
           onPlay={play}
         />
       </div>
+      {/* <div className="absolute top center">
+        <canvas id="OscilloscopeCanvas"></canvas>
+      </div> */}
       {/* <div className="absolute bg-white bottom-2 left-2 p-2 rounded-xl text-2xl">
         <button onClick={toggleCustomEditor}>
           {showCustomEditor ? <div>⬅️ 💻</div> : <div>➡ 💻</div>}

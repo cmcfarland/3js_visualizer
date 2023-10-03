@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
+import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 
 export default class SceneInit {
-  constructor(canvasID, camera, scene, stats, controls, renderer, fov = 36) {
+  constructor(canvasID, camera, scene, stats, controls, renderer, fov = 36, effect) {
     this.fov = fov;
     this.scene = scene;
     this.stats = stats;
@@ -11,6 +12,7 @@ export default class SceneInit {
     this.controls = controls;
     this.renderer = renderer;
     this.canvasID = canvasID;
+    this.effect = effect;
   }
 
   initScene() {
@@ -41,6 +43,14 @@ export default class SceneInit {
 
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
+    // add matlab-style black outlines
+    // https://discourse.threejs.org/t/how-do-i-use-outlineeffect-with-mmdloader/8976/2
+    this.effect = new OutlineEffect( this.renderer, {
+      defaultThickness: 0.01,
+      defaultColor: [ 0, 0, 0 ],
+      defaultAlpha: 0.0,
+      defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene
+    } );
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     // point camera towards center of fft map
@@ -52,6 +62,8 @@ export default class SceneInit {
     // To set up the editor integration, add something like REACT_EDITOR=atom to the .env.local file in your project folder and restart the development server.
 
     this.stats = Stats();
+    // this.stats.dom.style.position = 'absolute';
+    // this.stats.dom.style.float = 'left';
     document.body.appendChild(this.stats.dom);
 
     // ambient light which is for the whole scene
@@ -61,7 +73,7 @@ export default class SceneInit {
 
     // spot light which is illuminating the chart directly
     let spotLight = new THREE.SpotLight(0xffffff, 0.55);
-    spotLight.castShadow = true;
+    spotLight.castShadow = false;
     spotLight.position.set(0, 80, 10);
     this.scene.add(spotLight);
 
@@ -70,8 +82,6 @@ export default class SceneInit {
   }
 
   animate() {
-    // NOTE: Window is implied.
-    // requestAnimationFrame(this.animate.bind(this));
     window.requestAnimationFrame(this.animate.bind(this));
     this.render();
     this.stats.update();
@@ -80,12 +90,14 @@ export default class SceneInit {
 
   render() {
     this.uniforms.u_time.value += this.clock.getDelta();
-    this.renderer.render(this.scene, this.camera);
+    this.effect.render( this.scene, this.camera );
+    // this.renderer.render(this.scene, this.camera);
   }
 
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.effect.setSize( window.innerWidth, window.innerHeight );
   }
 }
