@@ -4,7 +4,7 @@ import Stats from "three/examples/jsm/libs/stats.module";
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 
 export default class SceneInit {
-  constructor(canvasID, camera, scene, stats, controls, renderer, fov = 36, effect) {
+  constructor(canvasID, camera, scene, stats, controls, renderer, fov=36, effect) {
     this.fov = fov;
     this.scene = scene;
     this.stats = stats;
@@ -53,13 +53,8 @@ export default class SceneInit {
     } );
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    // point camera towards center of fft map
+    // point camera towards center of fft map (see also: camera.lookat)
     this.controls.target = new THREE.Vector3(0, 0, 0);
-    // makes DAT menu load multiple times during error recovery
-    //
-    // Could not open SceneInit.js in the editor.
-    // The editor process exited with an error: Terminal editors can only be used on macOS.
-    // To set up the editor integration, add something like REACT_EDITOR=atom to the .env.local file in your project folder and restart the development server.
 
     this.stats = Stats();
     // this.stats.dom.style.position = 'absolute';
@@ -79,6 +74,8 @@ export default class SceneInit {
 
     // if window resizes
     window.addEventListener("resize", () => this.onWindowResize(), false);
+    // if canvas is clicked
+    canvas.addEventListener('click', () => this.onCanvasClick(), false);
   }
 
   animate() {
@@ -90,7 +87,7 @@ export default class SceneInit {
 
   render() {
     this.uniforms.u_time.value += this.clock.getDelta();
-    this.effect.render( this.scene, this.camera );
+    this.effect.render( this.scene, this.camera ); 
     // this.renderer.render(this.scene, this.camera);
   }
 
@@ -99,5 +96,8 @@ export default class SceneInit {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.effect.setSize( window.innerWidth, window.innerHeight );
+  }
+
+  onCanvasClick() {
   }
 }

@@ -6,7 +6,7 @@ import { vertexShader, fragmentShader } from "./lib/Shaders";
 
 export default function Home() {
   let test, audioContext, audioElement, dataArray, analyser, source;
-  let timeArray;
+  let timeArray, freezeWaveform;
 
   let gui;
   const initGui = async () => {
@@ -91,6 +91,8 @@ export default function Home() {
 
       // note: update uniforms
       uniforms.u_time.value = time;
+      // enable freezing of waveform when song is paused
+      //if (!this.freeze)
       uniforms.u_data_arr.value = dataArray;
 
       // note: call render function on every animation frame
@@ -113,17 +115,19 @@ export default function Home() {
   // };
 
   // bug when switching betwen tracks in Chrome (needs browser restart): 
-  // https://stackoverflow.com/questions/50657659/different-behaviour-of-webaudio-api-on-google-chrome
-  
   // InvalidStateError: Failed to execute 'createMediaElementSource' on 'AudioContext': 
   // HTMLMediaElement already connected previously to a different MediaElementSourceNode.
+  // https://stackoverflow.com/questions/50657659/different-behaviour-of-webaudio-api-on-google-chrome  
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="absolute bottom-2 right-2">
         <audio
           id="myAudio"
-          src="./00_ice_sheets.mp3"
           //src="./fur_elise.mp3"
+          //src="./00_ice_sheets.mp3"
+			    src="https://labs.phaser.io/assets/audio/Dafunk - Hardcore Power (We Believe In Goa - Remix).ogg"
+          type="audio/ogg"
+          crossOrigin="anonymous"
           className="w-80"
           controls
           autoPlay
