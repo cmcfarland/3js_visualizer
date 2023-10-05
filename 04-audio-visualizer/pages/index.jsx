@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as THREE from "three";
 import SceneInit from "./lib/SceneInit";
-import CustomEditor from "./components/CustomEditor";
 import { vertexShader, fragmentShader } from "./lib/Shaders";
 
 export default function Home() {
@@ -22,6 +21,7 @@ export default function Home() {
     source.connect(analyser);
     analyser.connect(audioContext.destination);
     analyser.fftSize = 2048;
+    // analyser.window = ... external DSP module? 
     dataArray = new Uint8Array(analyser.frequencyBinCount);
   };
 

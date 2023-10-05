@@ -1,10 +1,19 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
-import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
+// import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
+
+// https://medium.com/@coderfromnineteen/three-js-post-processing-outline-effect-6dff6a2fe3c0
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+//Modules below are regarded to shader
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
+import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
 
 export default class SceneInit {
-  constructor(canvasID, camera, scene, stats, controls, renderer, fov=36, effect) {
+  constructor(canvasID, camera, scene, stats, controls, renderer, fov=36, 
+    composer, renderPass, outlinePass, shaderPass) {
     this.fov = fov;
     this.scene = scene;
     this.stats = stats;
@@ -12,7 +21,10 @@ export default class SceneInit {
     this.controls = controls;
     this.renderer = renderer;
     this.canvasID = canvasID;
-    this.effect = effect;
+    this.composer = composer;
+    this.renderPass  = renderPass;
+    this.outlinePass = outlinePass;
+    this.shaderPass  = shaderPass;
   }
 
   initScene() {
@@ -43,16 +55,34 @@ export default class SceneInit {
 
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
-    // add matlab-style black outlines
-    // https://discourse.threejs.org/t/how-do-i-use-outlineeffect-with-mmdloader/8976/2
-    this.effect = new OutlineEffect( this.renderer, {
-      defaultThickness: 0.01,
-      defaultColor: [ 0, 0, 0 ],
-      defaultAlpha: 0.0,
-      defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene
-    } );
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // -- shader + outline effect
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // - render pass
+    this.renderPass = new RenderPass( this.scene, this.camera );
+    this.composer.addPass( this.renderPass );
+    // - outline pass
+    this.outlinePass = new OutlinePass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      this.scene,
+      this.camera
+    )
+    // this.composer.addPass(this.outlinePass);
+    // // -- parameter config
+    // this.outlinePass = { 
+    //   edgeStrength: 1.0,
+    //   edgeGlow: 1.0,
+    //   edgeThickness: 1.0,
+    //   pulsePeriod: 0,
+    //   usePatternTexture: false,
+    //   visibleEdgeColor: new THREE.Color( 0x000000 ),
+    // } 
+    // // pattern texture for an object mesh
+    // // this.outlinePass.edgeColor.set("#000000"); // set basic edge color
+    // // this.outlinePass.hiddenEdgeColor.set("#1abaff");  // set edge color when it hidden by other objects
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement); // this.render.domElement
     // point camera towards center of fft map (see also: camera.lookat)
     this.controls.target = new THREE.Vector3(0, 0, 0);
 
@@ -80,14 +110,14 @@ export default class SceneInit {
 
   animate() {
     window.requestAnimationFrame(this.animate.bind(this));
-    this.render();
+    this.composer.render();
     this.stats.update();
     this.controls.update();
   }
 
   render() {
     this.uniforms.u_time.value += this.clock.getDelta();
-    this.effect.render( this.scene, this.camera ); 
+    this.composer.render();
     // this.renderer.render(this.scene, this.camera);
   }
 
@@ -95,7 +125,7 @@ export default class SceneInit {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.effect.setSize( window.innerWidth, window.innerHeight );
+    // this.effect.setSize( window.innerWidth, window.innerHeight );
   }
 
   onCanvasClick() {
