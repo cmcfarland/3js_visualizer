@@ -106,3 +106,12 @@ dist
 # MacOS
 *.DS*
 04-audio-visualizer/package-lock.json
+04-audio-visualizer/Threejs_oscilloscope.htm
+04-audio-visualizer/pages/lib/dat.gui.min.js
+04-audio-visualizer/pages/lib/init_processing.js
+04-audio-visualizer/pages/lib/main.js
+04-audio-visualizer/pages/lib/OrbitControls.js
+04-audio-visualizer/pages/lib/processing.js
+04-audio-visualizer/pages/lib/three.js
+04-audio-visualizer/pages/lib/Tone.min.js
+04-audio-visualizer/pages/lib/Tween.js

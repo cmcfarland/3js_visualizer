@@ -108,12 +108,6 @@ export default function Home() {
     test.animate();
   }, []);
 
-  // note: Custom editor helpers.
-  // const [showCustomEditor, setShowCustomEditor] = useState(false);
-  // const toggleCustomEditor = () => {
-  //   setShowCustomEditor(!showCustomEditor);
-  // };
-
   // bug when switching betwen tracks in Chrome (needs browser restart): 
   // InvalidStateError: Failed to execute 'createMediaElementSource' on 'AudioContext': 
   // HTMLMediaElement already connected previously to a different MediaElementSourceNode.
@@ -134,16 +128,7 @@ export default function Home() {
           onPlay={play}
         />
       </div>
-      {/* <div className="absolute top center">
-        <canvas id="OscilloscopeCanvas"></canvas>
-      </div> */}
-      {/* <div className="absolute bg-white bottom-2 left-2 p-2 rounded-xl text-2xl">
-        <button onClick={toggleCustomEditor}>
-          {showCustomEditor ? <div>⬅️ 💻</div> : <div>➡ 💻</div>}
-        </button>
-      </div> */}
       <canvas id="myThreeJsCanvas"></canvas>
-      {/* {showCustomEditor ? <CustomEditor /> : null} */}
     </div>
   );
 }

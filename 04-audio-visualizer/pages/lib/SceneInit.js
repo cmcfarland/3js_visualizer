@@ -68,6 +68,7 @@ export default class SceneInit {
       this.scene,
       this.camera
     )
+    // outline not working, just leave it for now
     // this.composer.addPass(this.outlinePass);
     // // -- parameter config
     // this.outlinePass = { 
