@@ -63,11 +63,11 @@ export default class SceneInit {
     this.renderPass = new RenderPass( this.scene, this.camera );
     this.composer.addPass( this.renderPass );
     // - outline pass
-    this.outlinePass = new OutlinePass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      this.scene,
-      this.camera
-    )
+    // this.outlinePass = new OutlinePass(
+    //   new THREE.Vector2(window.innerWidth, window.innerHeight),
+    //   this.scene,
+    //   this.camera
+    // )
     // outline not working, just leave it for now
     // this.composer.addPass(this.outlinePass);
     // // -- parameter config

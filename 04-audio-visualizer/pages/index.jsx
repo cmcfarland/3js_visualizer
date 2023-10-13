@@ -5,7 +5,7 @@ import { vertexShader, fragmentShader } from "./lib/Shaders";
 
 export default function Home() {
   let test, audioContext, audioElement, dataArray, analyser, source;
-  let timeArray, freezeWaveform;
+  let timeArray;
 
   let gui;
   const initGui = async () => {
@@ -20,9 +20,10 @@ export default function Home() {
     analyser = audioContext.createAnalyser();
     source.connect(analyser);
     analyser.connect(audioContext.destination);
-    analyser.fftSize = 2048;
+    analyser.fftSize = 1024;
     // analyser.window = ... external DSP module? 
     dataArray = new Uint8Array(analyser.frequencyBinCount);
+    audioElement.volume = 0.1;
   };
 
   const play = async () => {
@@ -46,10 +47,6 @@ export default function Home() {
       // u_black: { type: "vec3", value: new THREE.Color(0x000000) },
       // u_white: { type: "vec3", value: new THREE.Color(0xffffff) },
     };
-
-    // note: uncomment these geometries to see different visualizations
-    // const planeGeometry = new THREE.BoxGeometry(64, 64, 8, 64, 64, 8);
-    // const planeGeometry = new THREE.SphereGeometry(16, 64, 64);
 
     // note: set up plane mesh and add it to the scene
     const planeGeometry = new THREE.PlaneGeometry(64, 64, 64, 64);
@@ -87,21 +84,21 @@ export default function Home() {
 
     const render = (time) => {
       // note: update audio data
-      analyser.getByteFrequencyData(dataArray);
+      // enable freezing of waveform when song is paused
+      if (!audioElement.paused){
+        analyser.getByteFrequencyData(dataArray);
+      }
 
       // note: update uniforms
       uniforms.u_time.value = time;
-      // enable freezing of waveform when song is paused
-      //if (!this.freeze)
       uniforms.u_data_arr.value = dataArray;
-
       // note: call render function on every animation frame
       requestAnimationFrame(render);
     };
 
     render();
   };
-
+  
   useEffect(() => {
     test = new SceneInit("myThreeJsCanvas");
     test.initScene();
