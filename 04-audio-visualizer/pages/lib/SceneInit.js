@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
+import Oscilloscope from "./Oscilloscope.js"
 // import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 
 // https://medium.com/@coderfromnineteen/three-js-post-processing-outline-effect-6dff6a2fe3c0
@@ -13,7 +14,7 @@ import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
 
 export default class SceneInit {
   constructor(canvasID, camera, scene, stats, controls, renderer, fov=36, 
-    composer, renderPass, outlinePass, shaderPass) {
+    scope, composer, renderPass, outlinePass, shaderPass) {
     this.fov = fov;
     this.scene = scene;
     this.stats = stats;
@@ -21,6 +22,7 @@ export default class SceneInit {
     this.controls = controls;
     this.renderer = renderer;
     this.canvasID = canvasID;
+    this.scope = scope;
     this.composer = composer;
     this.renderPass  = renderPass;
     this.outlinePass = outlinePass;
@@ -92,10 +94,13 @@ export default class SceneInit {
     // this.stats.dom.style.float = 'left';
     document.body.appendChild(this.stats.dom);
 
+    this.scope = new Oscilloscope();
+    document.body.appendChild(this.scope.dom);
+
     // ambient light which is for the whole scene
     let ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     ambientLight.castShadow = false;
-    this.scene.add(ambientLight);
+    this.scene.add(ambientLight); 
 
     // spot light which is illuminating the chart directly
     let spotLight = new THREE.SpotLight(0xffffff, 0.55);
@@ -112,6 +117,7 @@ export default class SceneInit {
   animate() {
     window.requestAnimationFrame(this.animate.bind(this));
     this.composer.render();
+    this.scope.render();
     this.stats.update();
     this.controls.update();
   }
@@ -119,6 +125,7 @@ export default class SceneInit {
   render() {
     this.uniforms.u_time.value += this.clock.getDelta();
     this.composer.render();
+    this.scope.render();
     // this.renderer.render(this.scene, this.camera);
   }
 
@@ -126,6 +133,7 @@ export default class SceneInit {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.scope.renderer.setSize(window.innerWidth, this.scope.audio.height);
     // this.effect.setSize( window.innerWidth, window.innerHeight );
   }
 

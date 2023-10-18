@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import * as THREE from "three";
 import SceneInit from "./lib/SceneInit";
 import { vertexShader, fragmentShader } from "./lib/Shaders";
+import { vertexShaderScope, fragmentShaderScope } from "./lib/Oscilloscope";
 
 export default function Home() {
   let test, audioContext, audioElement, dataArray, analyser, source;
-  let timeArray;
+  let timeArray, fftSize = 1024;
 
   let gui;
   const initGui = async () => {
@@ -20,10 +21,11 @@ export default function Home() {
     analyser = audioContext.createAnalyser();
     source.connect(analyser);
     analyser.connect(audioContext.destination);
-    analyser.fftSize = 1024;
-    // analyser.window = ... external DSP module? 
+    analyser.fftSize = fftSize;
+    // analyser.window = ... JUCE DSP module? 
     dataArray = new Uint8Array(analyser.frequencyBinCount);
-    audioElement.volume = 0.1;
+    timeArray = new Float32Array(analyser.frequencyBinCount);
+    // audioElement.volume = 0.1;
   };
 
   const play = async () => {
@@ -41,19 +43,46 @@ export default function Home() {
         value: 3.0,
       },
       u_data_arr: {
-        type: "float[64]",
+        type: "float["+ dataArray.length +"]",
         value: dataArray,
       },
-      // u_black: { type: "vec3", value: new THREE.Color(0x000000) },
-      // u_white: { type: "vec3", value: new THREE.Color(0xffffff) },
     };
 
-    // note: set up plane mesh and add it to the scene
+    const uniforms_scope = {
+      u_amplitude: {
+        type: "f",
+        value: 24.0,
+      },
+      u_data_arr: {
+        type: "float["+ timeArray.length +"]",
+        value: timeArray,
+      },
+      // color: { 
+      //   value: new THREE.Vector3(0, 0, 0) 
+      // }
+    };
+    var shaderMaterial = new THREE.ShaderMaterial({
+      uniforms:       uniforms_scope,
+      vertexShader:   vertexShaderScope( analyser.frequencyBinCount ),
+      fragmentShader: fragmentShaderScope(),
+      // blending:       THREE.AdditiveBlending,
+      depthTest:      false,
+      transparent:    false
+    });
+
+    const positions = [];
+    for (var i = 0; i < timeArray.length; i++) {
+      positions.push( new THREE.Vector3( i, 0, 0 ) );
+    }    
+    const buffergeometry = new THREE.BufferGeometry().setFromPoints(positions);
+        
+    const line = new THREE.Line(buffergeometry, shaderMaterial);
+    test.scope.scene.add(line);
+        
+    // FFT plane visualizer
     const planeGeometry = new THREE.PlaneGeometry(64, 64, 64, 64);
-    // const planeMaterial = new THREE.MeshNormalMaterial({ wireframe: true });
-    // const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
     const planeCustomMaterial = new THREE.ShaderMaterial({
-      // note: this is where the magic happens
+      // passing FFT data to shaders
       uniforms: uniforms,
       vertexShader: vertexShader(),
       fragmentShader: fragmentShader(),
@@ -73,25 +102,35 @@ export default function Home() {
       audioWaveGui
         .add(planeCustomMaterial, "wireframe")
         .name("wireframe")
-        .setValue(false)
+        .setValue(true)
         .listen();
       audioWaveGui
         .add(uniforms.u_amplitude, "value", 1.0, 8.0)
-        .name("amplitude")
+        .name("fft scale")
         .setValue(4.0)
         .listen();
+      audioWaveGui
+        .add(uniforms_scope.u_amplitude, "value", 20.0, 400.0)
+        .name("time scale")
+        .setValue(48.0)
+        .listen();
     }
-
+      
     const render = (time) => {
       // note: update audio data
       // enable freezing of waveform when song is paused
       if (!audioElement.paused){
         analyser.getByteFrequencyData(dataArray);
+        analyser.getFloatTimeDomainData(timeArray);
+        // console.log("freq: " + dataArray);
+        // console.log("time: " + timeArray);
       }
 
       // note: update uniforms
       uniforms.u_time.value = time;
       uniforms.u_data_arr.value = dataArray;
+      uniforms_scope.u_data_arr.value = timeArray;
+
       // note: call render function on every animation frame
       requestAnimationFrame(render);
     };
