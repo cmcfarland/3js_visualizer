@@ -84,16 +84,19 @@ class Panel {
 
 const vertexShaderScope = ( buffer=1024 ) => {
 	return `
-		uniform float u_amplitude;
-		uniform float[` + buffer + `] u_data_arr;
+		uniform float u_scale_y;
+		uniform float u_scale_x;
+		uniform float[`+ buffer +`] u_data_arr;
 
 		void main() {
 
-			float floor_x = floor(position.x);
+			// scale X from center of view
+			float f_buffer = float(`+ buffer +`)/2.0;
+			float floor_x = floor(position.x + f_buffer);
+			float new_x = position.x * u_scale_x; // * (position.x - f_buffer);
+			float new_y = u_data_arr[int(floor_x)] * u_scale_y;
 
-			float y = u_data_arr[int(floor_x)] * u_amplitude;
-
-			gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, y, position.z, 1.0);
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(new_x, new_y, position.z, 1.0);
 
 		}
 	`;
