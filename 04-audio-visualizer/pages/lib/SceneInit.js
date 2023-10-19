@@ -6,35 +6,21 @@ import Oscilloscope from "./Oscilloscope.js"
 
 // https://medium.com/@coderfromnineteen/three-js-post-processing-outline-effect-6dff6a2fe3c0
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
-import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass";
+// import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 //Modules below are regarded to shader
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
-import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
+// import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
+// import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
 
 export default class SceneInit {
-  constructor(canvasID, camera, scene, stats, controls, renderer, fov=36, 
-    scope, composer, renderPass, outlinePass, shaderPass) {
+  constructor(canvasID, fov=36) {
     this.fov = fov;
-    this.scene = scene;
-    this.stats = stats;
-    this.camera = camera;
-    this.controls = controls;
-    this.renderer = renderer;
     this.canvasID = canvasID;
-    this.scope = scope;
-    this.composer = composer;
-    this.renderPass  = renderPass;
-    this.outlinePass = outlinePass;
-    this.shaderPass  = shaderPass;
   }
 
   initScene() {
     this.camera = new THREE.PerspectiveCamera(
-      this.fov,
-      window.innerWidth / window.innerHeight,
-      1,
-      1000
+      this.fov, window.innerWidth / window.innerHeight, 1, 1000
     );
     this.camera.position.z = 196;
 
@@ -43,12 +29,9 @@ export default class SceneInit {
 
     this.uniforms = {
       u_time: { type: "f", value: 1.0 },
-      colorB: { type: "vec3", value: new THREE.Color(0xfff000) },
-      colorA: { type: "vec3", value: new THREE.Color(0xffffff) },
     };
 
     // specify a canvas which is already created in the HTML file and tagged by an id
-    // aliasing enabled
     const canvas = document.getElementById(this.canvasID);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -89,12 +72,21 @@ export default class SceneInit {
     // point camera towards center of fft map (see also: camera.lookat)
     this.controls.target = new THREE.Vector3(0, 0, 0);
 
+    const stats = document.getElementById('stats');
+    if (stats) {
+      stats.parentNode.removeChild(stats)
+    }
     this.stats = Stats();
-    // this.stats.dom.style.position = 'absolute';
+    this.stats.dom.id = 'stats';
     // this.stats.dom.style.float = 'left';
     document.body.appendChild(this.stats.dom);
 
+    const scope = document.getElementById('scope');
+    if (scope) {
+      scope.parentNode.removeChild(scope)
+    }
     this.scope = new Oscilloscope();
+    this.scope.dom.id = 'stats';
     document.body.appendChild(this.scope.dom);
 
     // ambient light which is for the whole scene
@@ -108,9 +100,7 @@ export default class SceneInit {
     spotLight.position.set(0, 80, 10);
     this.scene.add(spotLight);
 
-    // if window resizes
     window.addEventListener("resize", () => this.onWindowResize(), false);
-    // if canvas is clicked
     canvas.addEventListener('click', () => this.onCanvasClick(), false);
   }
 
@@ -134,9 +124,52 @@ export default class SceneInit {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.scope.renderer.setSize(window.innerWidth, this.scope.audio.height);
-    // this.effect.setSize( window.innerWidth, window.innerHeight );
   }
 
   onCanvasClick() {
   }
 }
+
+const vertexShader = () => {
+  return `
+      varying float x;
+      varying float y;
+      varying float z;
+      varying vec3 vUv;
+
+      uniform float u_time;
+      uniform float u_amplitude;
+      uniform float[64] u_data_arr;
+
+      void main() {
+        vUv = position;
+
+        x = abs(position.x);
+	      y = abs(position.y);
+
+        float floor_x = round(x);
+	      float floor_y = round(y);
+
+        z = sin(u_data_arr[int(floor_x)] / 50.0 + u_data_arr[int(floor_y)] / 50.0) * u_amplitude;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, z, 1.0);
+      }
+    `;
+};
+
+const fragmentShader = () => {
+  return `
+    varying float x;
+    varying float y;
+    varying float z;
+    varying vec3 vUv;
+
+    uniform float u_time;
+
+    void main() {
+      gl_FragColor = vec4((32.0 - abs(x)) / 32.0, (32.0 - abs(y)) / 32.0, (abs(x + y) / 2.0) / 32.0, 1.0);
+    }
+  `;
+};
+
+export { vertexShader, fragmentShader };

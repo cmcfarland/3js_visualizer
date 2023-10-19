@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as THREE from "three";
 import SceneInit from "./lib/SceneInit";
-import { vertexShader, fragmentShader } from "./lib/Shaders";
+import { vertexShader, fragmentShader } from "./lib/SceneInit";
 import { vertexShaderScope, fragmentShaderScope } from "./lib/Oscilloscope";
 
 export default function Home() {
@@ -12,15 +12,22 @@ export default function Home() {
   timeArray = new Float32Array(fftSize / 2);
 
   let gui;
+  
   const initGui = async () => {
     const dat = await import("dat.gui");
+    const old_gui = document.getElementById('gui');
+    if (old_gui) {
+      old_gui.parentNode.removeChild(old_gui)
+    }
     gui = new dat.GUI();
+    gui.domElement.id = 'gui';
   };
 
   const setupAudioContext = () => {
     audioContext = new window.AudioContext();
     audioElement = document.getElementById("myAudio");
     source = audioContext.createMediaElementSource(audioElement);
+    console.log("media channels: " + source.channelCount);
     analyser = audioContext.createAnalyser();
     source.connect(analyser);
     analyser.connect(audioContext.destination);
@@ -96,7 +103,7 @@ export default function Home() {
     planeMesh.scale.x = 2;
     planeMesh.scale.y = 2;
     planeMesh.scale.z = 2;
-    planeMesh.position.y = 0;
+    planeMesh.position.y = 1;
     test.scene.add(planeMesh);
 
     const freqGui = gui.addFolder("frequency");
@@ -109,6 +116,11 @@ export default function Home() {
       .add(uniforms.u_amplitude, "value", 1.0, 25.0)
       .name("freq scale")
       .setValue(uniforms.u_amplitude.value)
+      .listen();
+    freqGui
+      .add(analyser, "smoothingTimeConstant", 0, 1.0)
+      .name("time smoothing")
+      .setValue(0.8)
       .listen();
     const audioGui = gui.addFolder("audio");
     audioGui
@@ -170,6 +182,8 @@ export default function Home() {
           id="myAudio"
           //src="./fur_elise.mp3"
           //src="./00_ice_sheets.mp3"
+
+          // stream web sudio
 			    src="https://labs.phaser.io/assets/audio/Dafunk - Hardcore Power (We Believe In Goa - Remix).ogg"
           type="audio/ogg"
           crossOrigin="anonymous"
