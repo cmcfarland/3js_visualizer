@@ -11,27 +11,35 @@ export default function Home() {
   dataArray = new Uint8Array(fftSize / 2);
   timeArray = new Float32Array(fftSize / 2);
 
-  let gui;
-  
+  let gui, gainNode;
+
   const initGui = async () => {
-    const dat = await import("dat.gui");
+    // remove duplicate controls caused by rapid-rebuild 
     const old_gui = document.getElementById('gui');
     if (old_gui) {
       old_gui.parentNode.removeChild(old_gui)
     }
+
+    const dat = await import("dat.gui");
     gui = new dat.GUI();
-    gui.domElement.id = 'gui';
+    const guiParent = gui.domElement.parentNode;
+    guiParent.id = 'gui'; 
+    document.body.appendChild(guiParent);
   };
 
   const setupAudioContext = () => {
     audioContext = new window.AudioContext();
     audioElement = document.getElementById("myAudio");
     source = audioContext.createMediaElementSource(audioElement);
-    console.log("media channels: " + source.channelCount);
     analyser = audioContext.createAnalyser();
+    gainNode = new GainNode(audioContext, { gain: 0.05 });
     source.connect(analyser);
-    analyser.connect(audioContext.destination);
+    // analyser.connect(audioContext.destination);
+    analyser.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
     analyser.fftSize = fftSize;
+    console.log("media channels: " + source.channelCount);
     // analyser.window = ... JUCE DSP module? 
     // audioElement.volume = 0.1;
   };
@@ -65,9 +73,10 @@ export default function Home() {
         type: "float["+ timeArray.length +"]",
         value: timeArray,
       },
-      // color: { 
-      //   value: new THREE.Vector3(0, 0, 0) 
-      // }
+      u_gain: {
+        type: "f",
+        value: 0.1,
+      },
     };
 
     var shaderMaterial = new THREE.ShaderMaterial({
@@ -89,7 +98,8 @@ export default function Home() {
     test.scope.scene.add(timeLine);
     
     // FFT plane visualizer
-    const planeGeometry = new THREE.PlaneGeometry(64, 64, 64, 64);
+    const planeHalfLength = fftSize / 2;
+    const planeGeometry = new THREE.PlaneGeometry(planeHalfLength, planeHalfLength, planeHalfLength, planeHalfLength);
     const planeCustomMaterial = new THREE.ShaderMaterial({
       // passing FFT data to shaders
       uniforms: uniforms,
@@ -100,9 +110,6 @@ export default function Home() {
 
     const planeMesh = new THREE.Mesh(planeGeometry, planeCustomMaterial);
     planeMesh.rotation.x = -Math.PI / 2 + Math.PI / 4;
-    planeMesh.scale.x = 2;
-    planeMesh.scale.y = 2;
-    planeMesh.scale.z = 2;
     planeMesh.position.y = 1;
     test.scene.add(planeMesh);
 
@@ -133,9 +140,14 @@ export default function Home() {
       .name("time scale: X")
       .setValue(uniforms_scope.u_scale_x.value)
       .listen();
-  }
-
-  const load = async () => {
+    audioGui
+      .add(uniforms_scope.u_gain, "value", 0.0, 1.0)
+      .name("gain")
+      .setValue(0.1)
+      .listen()
+      .onChange((new_gain) => {
+        gainNode.gain.setValueAtTime(new_gain, audioContext.currentTime)
+      });
   }
 
   const play = async () => {
@@ -184,14 +196,15 @@ export default function Home() {
           //src="./00_ice_sheets.mp3"
 
           // stream web sudio
-			    src="https://labs.phaser.io/assets/audio/Dafunk - Hardcore Power (We Believe In Goa - Remix).ogg"
-          type="audio/ogg"
+			    // src="https://labs.phaser.io/assets/audio/Dafunk - Hardcore Power (We Believe In Goa - Remix).ogg"
+          // type="audio/ogg"
+          src="http://s9.viastreaming.net:9000/;stream.mp3" // CORS error
+          type="audio/mp3"
           crossOrigin="anonymous"
           className="w-80"
           controls
           autoPlay
           onPlay={play}
-          onLoad={load}
         />
       </div>
       <canvas id="myThreeJsCanvas"></canvas>

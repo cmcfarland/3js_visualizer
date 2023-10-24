@@ -14,9 +14,9 @@ export default class Oscilloscope {
 		this.audio = this.addPanel(new Panel('time', '#f00', '#002'));
 		
 		this.scene = new THREE.Scene();
-    let ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-    ambientLight.castShadow = false;
-    this.scene.add(ambientLight); 
+    // let ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    // ambientLight.castShadow = false;
+    // this.scene.add(ambientLight); 
 
 		this.width = this.audio.canvas.width / 2;
 		this.height = this.audio.canvas.height / 2;

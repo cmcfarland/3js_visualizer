@@ -22,7 +22,7 @@ export default class SceneInit {
     this.camera = new THREE.PerspectiveCamera(
       this.fov, window.innerWidth / window.innerHeight, 1, 1000
     );
-    this.camera.position.z = 196;
+    this.camera.position.z = 70;
 
     this.clock = new THREE.Clock();
     this.scene = new THREE.Scene();
@@ -32,9 +32,9 @@ export default class SceneInit {
     };
 
     // specify a canvas which is already created in the HTML file and tagged by an id
-    const canvas = document.getElementById(this.canvasID);
+    this.canvas = document.getElementById(this.canvasID);
     this.renderer = new THREE.WebGLRenderer({
-      canvas,
+      canvas: this.canvas,
       antialias: true,
     });
 
@@ -78,30 +78,29 @@ export default class SceneInit {
     }
     this.stats = Stats();
     this.stats.dom.id = 'stats';
-    // this.stats.dom.style.float = 'left';
-    document.body.appendChild(this.stats.dom);
+    this.canvas.parentNode.appendChild(this.stats.dom);
 
     const scope = document.getElementById('scope');
     if (scope) {
       scope.parentNode.removeChild(scope)
     }
     this.scope = new Oscilloscope();
-    this.scope.dom.id = 'stats';
-    document.body.appendChild(this.scope.dom);
+    this.scope.dom.id = 'scope';
+    this.canvas.parentNode.appendChild(this.scope.dom);
 
-    // ambient light which is for the whole scene
-    let ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-    ambientLight.castShadow = false;
-    this.scene.add(ambientLight); 
+    // // ambient light which is for the whole scene
+    // let ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // ambientLight.castShadow = false;
+    // this.scene.add(ambientLight); 
 
-    // spot light which is illuminating the chart directly
-    let spotLight = new THREE.SpotLight(0xffffff, 0.55);
-    spotLight.castShadow = false;
-    spotLight.position.set(0, 80, 10);
-    this.scene.add(spotLight);
+    // // spot light which is illuminating the chart directly
+    // let spotLight = new THREE.SpotLight(0xffffff, 0.55);
+    // spotLight.castShadow = false;
+    // spotLight.position.set(0, 80, 10);
+    // this.scene.add(spotLight);
 
     window.addEventListener("resize", () => this.onWindowResize(), false);
-    canvas.addEventListener('click', () => this.onCanvasClick(), false);
+    this.canvas.addEventListener('click', () => this.onCanvasClick(), false);
   }
 
   animate() {
