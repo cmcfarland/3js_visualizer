@@ -11,7 +11,7 @@ export default function Home() {
   dataArray = new Uint8Array(fftSize / 2);
   timeArray = new Float32Array(fftSize / 2);
 
-  let gui, gainNode;
+  let gui, gainNode, gainPass;
 
   const initGui = async () => {
     // remove duplicate controls caused by rapid-rebuild 
@@ -29,17 +29,26 @@ export default function Home() {
 
   const setupAudioContext = () => {
     audioContext = new window.AudioContext();
-    audioElement = document.getElementById("myAudio");
+    audioElement = document.getElementById("media");
     source = audioContext.createMediaElementSource(audioElement);
     analyser = audioContext.createAnalyser();
-    gainNode = new GainNode(audioContext, { gain: 0.05 });
+
+    // dummy node to connect to analyser and bypass CORS errors on livestreams
+    gainPass = new GainNode(audioContext, { gain: 1.0 });
+    // adjust playback volume AFTER analyser node to avoid affecting signal display
+    gainNode = new GainNode(audioContext, { gain: 0.5 });
+
     source.connect(analyser);
-    // analyser.connect(audioContext.destination);
-    analyser.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    analyser.connect(audioContext.destination);
+
+    // source.connect(gainPass);
+    // gainPass.connect(analyser);
+    // analyser.connect(gainNode);
+    // gainNode.connect(audioContext.destination);
 
     analyser.fftSize = fftSize;
-    console.log("media channels: " + source.channelCount);
+    // console.log("media channels: " + source.channelCount); // CORS errors
+    console.log("media channels: " + analyser.channelCount);
     // analyser.window = ... JUCE DSP module? 
     // audioElement.volume = 0.1;
   };
@@ -88,6 +97,7 @@ export default function Home() {
       transparent:    false
     });
 
+    // audio oscilloscope visualizer
     const positions = [];
     for (var i = -timeArray.length/2; i < timeArray.length/2; i++) {
       positions.push( new THREE.Vector3( i, 0, 0 ) );
@@ -98,7 +108,7 @@ export default function Home() {
     test.scope.scene.add(timeLine);
     
     // FFT plane visualizer
-    const planeHalfLength = fftSize / 2;
+    const planeHalfLength = timeArray.length / 8;
     const planeGeometry = new THREE.PlaneGeometry(planeHalfLength, planeHalfLength, planeHalfLength, planeHalfLength);
     const planeCustomMaterial = new THREE.ShaderMaterial({
       // passing FFT data to shaders
@@ -183,29 +193,55 @@ export default function Home() {
     test.animate();
   }, []);
 
-  // bug when switching betwen tracks in Chrome (needs browser restart): 
+  // bug when switching betwen tracks in Chrome (needs refresh and/or browser restart): 
   // InvalidStateError: Failed to execute 'createMediaElementSource' on 'AudioContext': 
   // HTMLMediaElement already connected previously to a different MediaElementSourceNode.
   // https://stackoverflow.com/questions/50657659/different-behaviour-of-webaudio-api-on-google-chrome  
   return (
+
     <div className="flex flex-col items-center justify-center">
       <div className="absolute bottom-2 right-2">
-        <audio
-          id="myAudio"
+        {/* 
+           let url = 'https://labs.phaser.io/assets/audio/Dafunk - Hardcore Power (We Believe In Goa - Remix).ogg'
+           let url = 'https://nstmradio.mixlr.com/events/2787207'
+           let url = 'https://www.youtube.com/live/MwtVkPKx3RA;';
+        */}
+        <video id="media" controls autoPlay
+          // live RttP audiostream working!! live visuals, not so much:
+          // onPlay={play}
+        >
+          {/* 
+              MediaElementAudioSource outputs zeroes due to CORS access restrictions for <url> [Chrome]
+              The HTMLMediaElement passed to createMediaElementSource has a cross-origin resource, the node will output silence. [Firefox]
+              https://stackoverflow.com/questions/48362093/cors-request-blocked-in-locally-opened-html-file
+          */}
+          <source src="http://s9.viastreaming.net:9000/;stream.mp3" 
+                  type="audio/mpeg"/> 
+        </video>
+        {/* <audio
+          id="media"
           //src="./fur_elise.mp3"
           //src="./00_ice_sheets.mp3"
 
-          // stream web sudio
+          // stream web audio
+          // https://labs.phaser.io/index.html?dir=audio/Web%20Audio/&q= 
+          // https://labs.phaser.io/view.html?src=src\audio\Web%20Audio\play%20audio%20file.js
+
+          // https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/audio
 			    // src="https://labs.phaser.io/assets/audio/Dafunk - Hardcore Power (We Believe In Goa - Remix).ogg"
+          // src="https://labs.phaser.io/assets/audio/Andrea_Milana_-_Harlequin_-_The_Clockworks_-_Electribe_MX_REMIX.ogg"
           // type="audio/ogg"
-          src="http://s9.viastreaming.net:9000/;stream.mp3" // CORS error
-          type="audio/mp3"
-          crossOrigin="anonymous"
-          className="w-80"
+          // src="http://stream.wunh.org:8000/;"
+          // src = "http://stream.wunh.org:8000/listen.pls"
+          src="http://s9.viastreaming.net:9000/;stream.mp3"
+          type="audio/mpeg"
+          // type="audio/mp3"
+          // crossOrigin="anonymous"
+          // className="w-80"
           controls
           autoPlay
           onPlay={play}
-        />
+        /> */}
       </div>
       <canvas id="myThreeJsCanvas"></canvas>
     </div>
