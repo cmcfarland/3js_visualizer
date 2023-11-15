@@ -8,15 +8,12 @@ export default class Oscilloscope {
 		this.buffer = buffer;		
 		this.dom = document.createElement('div');
 		this.dom.style.backgroundColor = '#000'
-		// extend from Stats
+		// from Stats
 	  this.dom.style.cssText = 'position:fixed;top:0;left:80;opacity:0.7';
 	
 		this.audio = this.addPanel(new Panel('time', '#f00', '#002'));
 		
 		this.scene = new THREE.Scene();
-    // let ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-    // ambientLight.castShadow = false;
-    // this.scene.add(ambientLight); 
 
 		this.width = this.audio.canvas.width / 2;
 		this.height = this.audio.canvas.height / 2;

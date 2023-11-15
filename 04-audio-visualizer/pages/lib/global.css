@@ -1,0 +1,8 @@
+/* https://stackoverflow.com/questions/51905803/next-js-how-to-change-css-of-root-div-next-on-specific-page */
+
+/* Other global styles such as 'html, body' etc... */
+
+#__next {
+  height: 0px; 
+  background-color: transparent;
+}
