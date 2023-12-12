@@ -115,3 +115,9 @@ dist
 04-audio-visualizer/pages/lib/three.js
 04-audio-visualizer/pages/lib/Tone.min.js
 04-audio-visualizer/pages/lib/Tween.js
+04-audio-visualizer/pages/lib/setupProxy.js
+04-audio-visualizer/Dockerfile
+04-audio-visualizer/.dockerignore
+.vscode/launch.json
+.vscode/tasks.json
+muviz_3js.code-workspace
